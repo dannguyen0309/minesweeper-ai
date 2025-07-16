@@ -1,0 +1,20 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python Debugger: Current File",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Debug iengine with args",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/iengine.py",
+      "console": "integratedTerminal",
+      "args": ["test_cases/test_HornKB.txt", "BC"]
+    }
+  ]
+}
