@@ -12,6 +12,7 @@ app = FastAPI()
 class GameState(BaseModel):
     opened: Dict[str, int]
     unopened: List[str]
+    flagged: List[str] = []
 
 class MoveResponse(BaseModel):
     action: str
@@ -21,7 +22,7 @@ class MoveResponse(BaseModel):
 @app.post('/play-move', response_model=MoveResponse)
 def play_move(game_state: GameState):
     kb = extract_kb_from_game_state(game_state.dict())
-    unopened = game_state.unopened
+    unopened = list(set(game_state.unopened) - set(game_state.flagged)) # avoiding loop
 
     # Foward Chaining
     for cell in unopened:
@@ -34,8 +35,8 @@ def play_move(game_state: GameState):
     risk = calculate_risk_heuristic(game_state.dict())
     if risk:
         safest = min(risk.items(), key=lambda x: x[1])[0]
-        return {"action": "open", "cell":cell}
+        return {"action": "open", "cell":safest}
     
     # Random if there is no choice
-    return {"action": "open", "cell": random.choice(unopened)}
+    # return {"action": "open", "cell": random.choice(unopened)}
 

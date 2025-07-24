@@ -28,6 +28,9 @@ def extract_kb_from_game_state(game_state: dict) -> list[str]:
     kb = set()
     opened = game_state["opened"]
     unopened = game_state["unopened"]
+    flagged = game_state.get("flagged", [])
+
+    unopened = [c for c in unopened if c not in flagged]
 
     for cell, value in opened.items():
         adj = get_adjacent_cells(cell)

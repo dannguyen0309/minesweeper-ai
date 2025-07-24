@@ -26,7 +26,7 @@ def calculate_risk_heuristic(game_state: dict) -> dict[str, float]:
         
     #Calculate the mean 
     final_score = {cell: sum(vals)/len(vals) for cell, vals in risk_score.items()}
-
+    print(final_score)
     return final_score
 
 
