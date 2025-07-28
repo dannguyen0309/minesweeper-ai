@@ -24,6 +24,8 @@ function App() {
     isGameWin,
     isGameOver,
     isGameEnded,
+    aiSolve,
+    isAISolving,
   } = useMinesweeperGame();
 
   return (
@@ -36,6 +38,7 @@ function App() {
         startNewGame={startNewGame}
         restartGame={restartGame}
         timeDiff={timeDiff}
+        onAISolve={aiSolve}
       />
       <Board
         gameBoard={gameBoard}
@@ -44,6 +47,7 @@ function App() {
         level={level}
       />
       <SelectLevel level={level} changeLevel={changeLevel} />
+      {isAISolving && <div>AI is solving...</div>}
       {isGameWin && <Confetti />}
     </div>
   );
