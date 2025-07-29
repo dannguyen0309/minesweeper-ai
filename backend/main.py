@@ -33,18 +33,34 @@ def play_move(game_state: GameState):
     kb = extract_kb_from_game_state(game_state.dict())
     unopened = list(set(game_state.unopened) - set(game_state.flagged))
 
-    # Forward Chaining
+        # If no cells are opened, pick a random cell for the first move
+    if not game_state.opened:
+        first_cell = random.choice(unopened)
+        print({"action": "open", "cell": first_cell, "info": "first move"})
+        return {"action": "open", "cell": first_cell}
+    
+    # Forward Chaining: open safe cells first
     for cell in unopened:
         if FC_entails(kb, f'safe_{cell}'):
             return {"action": "open", "cell": cell}
-        if FC_entails(kb, f'mine_{cell}'):
+
+    # Conservative flagging: only flag if risk is extremely high and no safe moves
+    risk = calculate_risk_heuristic(game_state.dict())
+    for cell in unopened:
+        if FC_entails(kb, f'mine_{cell}') and risk.get(cell, 0) > 0.99:
             return {"action": "flag", "cell": cell}
     
     # Calculate Risk
-    risk = calculate_risk_heuristic(game_state.dict())
+    RISK_THRESHOLD = 1.0
     if risk:
-        safest = min(risk.items(), key=lambda x: x[1])[0]
-        return {"action": "open", "cell": safest}
+        safe_cells = {cell: val for cell, val in risk.items() if val <= RISK_THRESHOLD}
+        if safe_cells:
+            min_risk = min(safe_cells.values())
+            for cell, val in safe_cells.items():
+                if val == min_risk:
+                    print({"action": "open", "cell": cell, "risk": min_risk})
+                    return {"action": "open", "cell": cell}
     
-    # Random if there is no choice
-    return {"action": "open", "cell": random.choice(unopened)}
+    # If all moves are risky, stop and let user decide
+    print("No safe moves, all risks above threshold")
+    return {"action": "no_move", "cell": None}

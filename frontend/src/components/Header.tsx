@@ -9,6 +9,7 @@ type HeaderProps = {
   startNewGame: () => void;
   restartGame: () => void;
   timeDiff: string;
+  onAISolve?: () => void;
 };
 
 const Header = ({
@@ -19,6 +20,7 @@ const Header = ({
   startNewGame,
   restartGame,
   timeDiff,
+  onAISolve,
 }: HeaderProps) => {
   return (
     <header>
@@ -33,6 +35,7 @@ const Header = ({
       <div className="header-buttons">
         <button onClick={startNewGame}>New</button>
         <button onClick={restartGame}>Restart</button>
+        {onAISolve && <button onClick={onAISolve}>AI Solve</button>}
       </div>
       <div className="header-label">
         <TimerDisplay timeDiff={timeDiff} />

@@ -21,6 +21,7 @@ import type { TBoard, TLevel } from "../types";
 const useMinesweeperGame = () => {
   const [level, setLevel] = useState<TLevel>("easy");
   const currentLevel = LEVELS[level];
+  const [isAISolving, setIsAISolving] = useState(false);
 
   const changeLevel = useCallback((selectedLevel: TLevel) => {
     setLevel(selectedLevel);
@@ -247,6 +248,100 @@ const useMinesweeperGame = () => {
     isGameWin,
     isGameOver,
     isGameEnded,
+    isAISolving,
+    aiSolve: async () => {
+      if (isGameEnded || isAISolving) return;
+      setIsAISolving(true);
+      try {
+        let board = JSON.parse(JSON.stringify(gameBoard));
+        let flags = [];
+        for (let r = 0; r < board.length; r++) {
+          for (let c = 0; c < board[r].length; c++) {
+            if (board[r][c].isFlagged) flags.push(cellId(r, c));
+          }
+        }
+        function cellId(row: number, col: number) {
+          // Dynamically support all board sizes
+          const rowLabels = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            .split("")
+            .slice(0, currentLevel.rows);
+          return rowLabels[row] + (col + 1);
+        }
+        function getOpened(board: TBoard) {
+          const opened: Record<string, number> = {};
+          for (let r = 0; r < board.length; r++) {
+            for (let c = 0; c < board[r].length; c++) {
+              if (
+                board[r][c].isOpened &&
+                typeof board[r][c].value === "number"
+              ) {
+                opened[cellId(r, c)] = board[r][c].value as number;
+              }
+            }
+          }
+          return opened;
+        }
+        function getUnopened(board: TBoard) {
+          const unopened: string[] = [];
+          for (let r = 0; r < board.length; r++) {
+            for (let c = 0; c < board[r].length; c++) {
+              if (!board[r][c].isOpened && !board[r][c].isFlagged) {
+                unopened.push(cellId(r, c));
+              }
+            }
+          }
+          return unopened;
+        }
+        let keepGoing = true;
+        while (keepGoing) {
+          const opened = getOpened(board);
+          const unopened = getUnopened(board);
+          const payload = {
+            opened,
+            unopened,
+            flagged: flags,
+          };
+          const res = await fetch("http://localhost:8000/play-move", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          const { action, cell } = await res.json();
+          if (!cell) break;
+          // Find cell coordinates
+          const rowLabels = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            .split("")
+            .slice(0, currentLevel.rows);
+          const row = rowLabels.indexOf(cell[0]);
+          const col = parseInt(cell.slice(1)) - 1;
+          if (action === "open") {
+            if (!board[row][col].isOpened && !board[row][col].isFlagged) {
+              board = openCell(board, row, col) || board;
+            }
+          } else if (action === "flag") {
+            if (!board[row][col].isFlagged && !board[row][col].isOpened) {
+              board[row][col].isFlagged = true;
+              flags.push(cellId(row, col));
+            }
+          }
+          // End if game is won/lost or no more moves
+          if (checkGameWin(board, currentLevel.totalMines)) {
+            keepGoing = false;
+          }
+          if (board[row][col].value === "mine" && action === "open") {
+            keepGoing = false;
+          }
+          // End if no unopened left
+          if (getUnopened(board).length === 0) {
+            keepGoing = false;
+          }
+        }
+        setGameBoard(board);
+      } catch (e) {
+        // handle error
+      }
+      setIsAISolving(false);
+    },
   };
 };
 

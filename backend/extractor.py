@@ -1,27 +1,30 @@
 from algorithms import FC_entails
 
 def get_adjacent_cells(cell_id:str) -> list[str]:
-    row_labels = "ABCDEFGHI"
-    col_labels = range(1,10+1)
-
+    # Dynamically support up to 26 rows and 99 columns
+    # Infer max row/col from cell_id and typical board sizes
+    row_labels = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    # Try to infer max_col from cell_id, fallback to 30
+    try:
+        col = int(cell_id[1:])
+    except Exception:
+        col = 1
+    max_col = max(9, col, 16, 30)  # fallback to 30 if uncertain
+    # For medium/expert, frontend should only send valid cell_ids
+    # You may want to pass board size explicitly for full generality
     row = cell_id[0]
-    col = int(cell_id[1:])
-
     row_idx = row_labels.index(row)
-
     directions =[(-1, -1), (-1, 0), (-1, 1),
                  (0, -1),          (0, 1),
                  (1, -1),  (1, 0),  (1, 1)]
-
     neighbors = []
-
+    # Use up to 26 rows, but only valid ones for the board
     for dr, dc in directions:
         r_idx = row_idx + dr
-        c_idx = col + dc 
-        if 0 <= r_idx < 9 and 1 <= c_idx <= 9:
+        c_idx = col + dc
+        if 0 <= r_idx < len(row_labels) and 1 <= c_idx <= max_col:
             neighbor = f"{row_labels[r_idx]}{c_idx}"
             neighbors.append(neighbor)
-    
     return neighbors
 
 def extract_kb_from_game_state(game_state: dict) -> list[str]:
@@ -53,19 +56,3 @@ def extract_kb_from_game_state(game_state: dict) -> list[str]:
             kb.add(f"clue_{cell}_{value}")
 
     return list(kb)
-
-
-# if __name__ == "__main__":
-#     import json
-#     with open("states/game_state.json") as f:
-#         game_state = json.load(f)
-
-#     kb = extract_kb_from_game_state(game_state)
-    
-#     # Test vài ô
-#     test_cells = ["F5", "F9", "G2", "G1", "E1", "E2", "E3", "E4"]
-
-#     for cell in test_cells:
-#         print(f"\n>>> Testing {cell}")
-#         FC_entails(kb, f"safe_{cell}")
-#         FC_entails(kb, f"mine_{cell}")
