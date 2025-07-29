@@ -300,6 +300,7 @@ const useMinesweeperGame = () => {
             opened,
             unopened,
             flagged: flags,
+            total_mines: currentLevel.totalMines,
           };
           const res = await fetch("http://localhost:8000/play-move", {
             method: "POST",
@@ -335,6 +336,8 @@ const useMinesweeperGame = () => {
           if (getUnopened(board).length === 0) {
             keepGoing = false;
           }
+          setGameBoard(board);
+          await new Promise((res) => setTimeout(res, 0));
         }
         setGameBoard(board);
       } catch (e) {

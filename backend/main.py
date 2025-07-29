@@ -13,54 +13,76 @@ app = FastAPI()
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with specific origins
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+
 class GameState(BaseModel):
     opened: Dict[str, int]
     unopened: List[str]
     flagged: List[str] = []
+    total_mines: int
+
+from typing import Optional
 
 class MoveResponse(BaseModel):
     action: str
-    cell: str
+    cell: Optional[str] = None
 
 @app.post('/play-move', response_model=MoveResponse)
 def play_move(game_state: GameState):
-    kb = extract_kb_from_game_state(game_state.dict())
+    import time
+    kb_input = {
+        'opened': game_state.opened,
+        'unopened': game_state.unopened,
+        'flagged': game_state.flagged
+    }
+    kb = extract_kb_from_game_state(kb_input)
     unopened = list(set(game_state.unopened) - set(game_state.flagged))
 
         # If no cells are opened, pick a random cell for the first move
     if not game_state.opened:
         first_cell = random.choice(unopened)
         print({"action": "open", "cell": first_cell, "info": "first move"})
+        time.sleep(1)
         return {"action": "open", "cell": first_cell}
     
     # Forward Chaining: open safe cells first
     for cell in unopened:
         if FC_entails(kb, f'safe_{cell}'):
+            time.sleep(1)
             return {"action": "open", "cell": cell}
+        
 
     # Conservative flagging: only flag if risk is extremely high and no safe moves
-    risk = calculate_risk_heuristic(game_state.dict())
-    for cell in unopened:
-        if FC_entails(kb, f'mine_{cell}') and risk.get(cell, 0) > 0.99:
-            return {"action": "flag", "cell": cell}
+    risk_input = {
+        'opened': game_state.opened,
+        'unopened': game_state.unopened,
+        'flagged': game_state.flagged
+    }
+    risk = calculate_risk_heuristic(risk_input)
+    # Only flag if we haven't already flagged as many as total_mines
+    if len(game_state.flagged) < game_state.total_mines:
+        for cell in unopened:
+            if FC_entails(kb, f'mine_{cell}') and risk.get(cell, 0) > 0.99:
+                time.sleep(1)
+                return {"action": "flag", "cell": cell}
     
-    # Calculate Risk
-    RISK_THRESHOLD = 1.0
+    # Only open the cell with the lowest risk if it's below a threshold, otherwise stop
+    RISK_GUESS_THRESHOLD = 1.0
     if risk:
-        safe_cells = {cell: val for cell, val in risk.items() if val <= RISK_THRESHOLD}
-        if safe_cells:
-            min_risk = min(safe_cells.values())
-            for cell, val in safe_cells.items():
-                if val == min_risk:
-                    print({"action": "open", "cell": cell, "risk": min_risk})
-                    return {"action": "open", "cell": cell}
-    
-    # If all moves are risky, stop and let user decide
-    print("No safe moves, all risks above threshold")
+        min_risk = min(risk.values())
+        if min_risk > RISK_GUESS_THRESHOLD:
+            print(f"All remaining moves are risky (min risk: {min_risk}). Stopping AI.")
+            return {"action": "no_move", "cell": None}
+        lowest_cells = [cell for cell, val in risk.items() if val == min_risk]
+        chosen = lowest_cells[0]  # deterministic: first in dict order
+        print({"action": "open", "cell": chosen, "risk": min_risk, "candidates": lowest_cells})
+        time.sleep(1)
+        return {"action": "open", "cell": chosen}
+    # If no risk info, stop
+    print("No risk info available")
     return {"action": "no_move", "cell": None}
