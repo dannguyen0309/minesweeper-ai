@@ -107,8 +107,6 @@ const useMinesweeperGame = () => {
 
   const openCell = useCallback(
     (board: TBoard, row: number, col: number): TBoard | null => {
-      if (!isTimerRunning) startTimer();
-
       const newGameBoard: TBoard = JSON.parse(JSON.stringify(board));
       const cell = newGameBoard[row][col];
       const isMineCell = cell.value === "mine";
@@ -251,6 +249,7 @@ const useMinesweeperGame = () => {
     isAISolving,
     aiSolve: async () => {
       if (isGameEnded || isAISolving) return;
+      if (!isTimerRunning) startTimer();
       setIsAISolving(true);
       try {
         let board = JSON.parse(JSON.stringify(gameBoard));
@@ -337,9 +336,13 @@ const useMinesweeperGame = () => {
             keepGoing = false;
           }
           setGameBoard(board);
-          await new Promise((res) => setTimeout(res, 0));
+          await new Promise((res) => setTimeout(res, 200)); // allow UI/timer to update
         }
         setGameBoard(board);
+        // Patch: After loop, check if game is won and update state if needed
+        if (checkGameWin(board, currentLevel.totalMines)) {
+          setIsGameWin(true);
+        }
       } catch (e) {
         // handle error
       }

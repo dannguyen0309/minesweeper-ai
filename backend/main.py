@@ -64,19 +64,24 @@ def play_move(game_state: GameState):
         'flagged': game_state.flagged
     }
     risk = calculate_risk_heuristic(risk_input)
-    # Only flag if we haven't already flagged as many as total_mines
-    if len(game_state.flagged) < game_state.total_mines:
-        for cell in unopened:
-            if FC_entails(kb, f'mine_{cell}') and risk.get(cell, 0) > 0.99:
-                time.sleep(1)
-                return {"action": "flag", "cell": cell}
+    # Allow unlimited flagging: flag any cell with high risk
+    for cell in unopened:
+        if FC_entails(kb, f'mine_{cell}') and risk.get(cell, 0) > 0.99:
+            time.sleep(1)
+            return {"action": "flag", "cell": cell}
     
-    # Only open the cell with the lowest risk if it's below a threshold, otherwise stop
+    # Only open the cell with the lowest risk if it's below a threshold, otherwise flag all remaining
     RISK_GUESS_THRESHOLD = 1.0
     if risk:
         min_risk = min(risk.values())
         if min_risk > RISK_GUESS_THRESHOLD:
-            print(f"All remaining moves are risky (min risk: {min_risk}). Stopping AI.")
+            # Flag all remaining unopened cells that are not already flagged (no limit)
+            to_flag = [cell for cell in unopened if cell not in game_state.flagged]
+            if to_flag:
+                print(f"All remaining moves are risky (min risk: {min_risk}). Flagging all: {to_flag}")
+                time.sleep(1)
+                return {"action": "flag", "cell": to_flag}
+            print(f"All remaining moves are risky (min risk: {min_risk}). No cells left to flag.")
             return {"action": "no_move", "cell": None}
         lowest_cells = [cell for cell, val in risk.items() if val == min_risk]
         chosen = lowest_cells[0]  # deterministic: first in dict order

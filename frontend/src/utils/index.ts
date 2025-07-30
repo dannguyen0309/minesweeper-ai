@@ -158,10 +158,10 @@ export const checkGameWin = (board: TBoard, totalMines: number) => {
 
 export const getTimeDiff = (timeNow: Date | null, timeStarted: Date | null) => {
   if (timeNow === null || timeStarted === null) return "00:00";
-
-  return new Intl.DateTimeFormat("en-US", {
-    minute: "2-digit",
-    second: "numeric",
-  }).format(timeNow.getTime() - timeStarted.getTime());
-  // return Math.floor((timeNow.getTime() - startTime.getTime()) / 1000);
+  const diff = Math.floor((timeNow.getTime() - timeStarted.getTime()) / 1000);
+  const minutes = Math.floor(diff / 60);
+  const seconds = diff % 60;
+  return `${minutes.toString().padStart(2, "0")}:${seconds
+    .toString()
+    .padStart(2, "0")}`;
 };
