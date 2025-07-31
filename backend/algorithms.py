@@ -144,19 +144,20 @@ function PL-FC-ENTAILS?(KB, q) returns true or false
     return false
 # """
 
+class NonHornClauseError(Exception):
+    pass
+
 def rule_and_facts (kb):
     rules = []
     facts = []
 
     for clause in kb:
         if "||" in clause or "<=>" in clause:
-            exit("Non-Horn clause detected: contains disjunction or biconditional") 
-            
+            raise NonHornClauseError("Non-Horn clause detected: contains disjunction or biconditional")
         if "=>" in clause:
             premise, conclusion = clause.split("=>")
             if (any(op in conclusion for op in  ["&", "||", "<=>", "=>"])):
-                exit("Conclusion is a single symbol. Ex: p1=> p2")
-
+                raise NonHornClauseError("Conclusion is a single symbol. Ex: p1=> p2")
             premise_symbols = [p.strip() for p in premise.strip().split("&")]
             rules.append((premise_symbols, conclusion.strip()))
         else:
@@ -257,8 +258,3 @@ def BC_entails(kb, query):
     else:
         print("NO")
         return False
-
-
-# STEP 5: Resolution-based algorithm
-
-

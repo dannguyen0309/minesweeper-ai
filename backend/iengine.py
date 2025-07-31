@@ -10,8 +10,16 @@ if __name__ == "__main__":
     if method == "TT":
         TT_entails(kb, query)
     elif method == "FC":
-        FC_entails(kb, query)
+        try:
+            FC_entails(kb, query)
+        except NonHornClauseError as e:
+            print(f"[INFO] {e} Switching to Truth Table method.")
+            TT_entails(kb, query)
     elif method == "BC":
-        BC_entails(kb, query)
+        try:
+            result = BC_entails(kb, query)
+        except NonHornClauseError as e:
+            print(f"[INFO] {e} Switching to Truth Table method.")
+            TT_entails(kb, query)
     else:
-        print("Unkown method. Choose TT, BC or TC.")
+        print("Unknown method. Choose TT, BC or FC.")
