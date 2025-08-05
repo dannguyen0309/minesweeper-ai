@@ -13,7 +13,7 @@ app = FastAPI()
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://minesweeper-ai-flame.vercel.app/"],
+    allow_origins=["https://minesweeper-ai.onrender.com", "http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
