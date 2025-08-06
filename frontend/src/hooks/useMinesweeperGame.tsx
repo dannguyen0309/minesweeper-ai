@@ -35,12 +35,7 @@ const useMinesweeperGame = () => {
     )
   );
 
-  //   useEffect(() => {
-  //     localStorage.setItem(
-  //       LOCAL_STORAGE_KEYS.gameBoard,
-  //       JSON.stringify(gameBoard)
-  //     );
-  //   }, [gameBoard]);
+  const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
   const [isGameWin, setIsGameWin] = useState(false);
   const [isGameOver, setIsGameOver] = useState(false);
@@ -301,14 +296,11 @@ const useMinesweeperGame = () => {
             flagged: flags,
             total_mines: currentLevel.totalMines,
           };
-          const res = await fetch(
-            "https://minesweeper-ai.onrender.com/play-move",
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(payload),
-            }
-          );
+          const res = await fetch(`${backendUrl}/play-move`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
           const { action, cell } = await res.json();
           if (!cell) break;
           // Find cell coordinates
