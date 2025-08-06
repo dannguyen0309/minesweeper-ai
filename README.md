@@ -73,8 +73,3 @@ python iengine.py .\test_cases\test_superhard_genericKB1.txt TT
 
 This project is licensed under the MIT License.
 Feel free to fork and build upon it!
-
----
-
-Let me know your GitHub repo link if you'd like me to insert it into the clone command (`git clone ...`). I can also help you add algorithm documentation or test case guidelines if needed.
-
