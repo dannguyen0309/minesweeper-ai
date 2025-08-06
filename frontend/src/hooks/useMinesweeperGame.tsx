@@ -160,7 +160,11 @@ const useMinesweeperGame = () => {
 
       let newGameBoard: TBoard;
 
+      // Always start the timer on the first valid left-click
+      if (isFirstClick) startTimer();
+
       if (isFirstClickOnMine) {
+        // Only reroll on FIRST click if it's a mine
         do {
           newGameBoard = initBoard(
             currentLevel.rows,
@@ -178,7 +182,7 @@ const useMinesweeperGame = () => {
         setGameBoard(boardAfterOpeningCell);
       }
     },
-    [isGameEnded, gameBoard, isTimerRunning, openCell, currentLevel]
+    [isGameEnded, gameBoard, isTimerRunning, openCell, currentLevel, startTimer]
   );
 
   const handleCellRightClick = useCallback(
