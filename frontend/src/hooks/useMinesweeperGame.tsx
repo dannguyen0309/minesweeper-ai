@@ -301,11 +301,14 @@ const useMinesweeperGame = () => {
             flagged: flags,
             total_mines: currentLevel.totalMines,
           };
-          const res = await fetch("http://localhost:8000/play-move", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
+          const res = await fetch(
+            "https://minesweeper-ai.onrender.com/play-move",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            }
+          );
           const { action, cell } = await res.json();
           if (!cell) break;
           // Find cell coordinates
